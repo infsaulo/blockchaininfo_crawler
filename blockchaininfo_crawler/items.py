@@ -1,6 +1,6 @@
 from scrapy.item import Item, Field
 
-class BlockchaininfoCrawlerItem(Item):
+class TagCrawlerItem(Item):
 
     address = Field()
     tag = Field()
