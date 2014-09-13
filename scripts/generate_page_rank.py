@@ -1,4 +1,5 @@
 import networkx as nx
+import simplejson as json
 import argparse
 import pickle
 import re
@@ -11,32 +12,55 @@ def generate_page_rank(graph):
     page_rank_dict = nx.pagerank(graph)
     return page_rank_dict
 
-def output_results(rank_dict, out_filename, cluster_filename):
+def output_results(rank_dict, out_filename, cluster_filename, tag_filename, amount_tops):
+
+    tag_list = None
+    with open(tag_filename) as tag_file:
+        tag_list_str = ''
+        for line in tag_file:
+            tag_list_str += line
+
+        tag_list = json.loads(tag_list_str)
 
     user_clusters = None
-    with open(cluster_filename, "rb") as infile:
-        user_clusters = pickle.load(infile)
+    with open(cluster_filename, "rb") as cluster_file:
+        user_clusters = pickle.load(cluster_file)
 
     with open(out_filename, 'w') as out_file:
-        out_file.write('user_cluster,ranking_score\n')
-        for cluster_id in sorted(rank_dict, key=rank_dict.get, reverse=True)[:15]:
+        out_file.write('user_cluster, wallets_addresses, tags_list, ranking_score\n')
+        for cluster_id in sorted(rank_dict, key=rank_dict.get, reverse=True)[:amount_tops]:
             wallet_ids = []
+            filtered_tag_list = []
+
             if re.match(r'^\d+$', cluster_id):
                 wallet_ids = [item[0] for item in filter(lambda i: i[1]==int(cluster_id), user_clusters.items())]
+                for wallet_id in wallet_ids:
+                    possible_tags = filter(lambda entry: entry['address'] == wallet_id, tag_list)
+                    if possible_tags:
+                        filtered_tag_list += possible_tags[0]
 
-            out_file.write(cluster_id + ',' + str(wallet_ids) + ','+  str(rank_dict[cluster_id]) + '\n')
+            else:
+                possible_tags = filter(lambda entry: entry['address'] == wallet_id, tag_list)
+                if possible_tags:
+                    filtered_tag_list += possible_tags[0]
+
+
+            out_file.write(cluster_id + ',' + str(wallet_ids) + ','+  str(filtered_tag_list) + ',' +
+                           str(rank_dict[cluster_id]) + '\n')
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--file', dest='filename')
     parser.add_argument('--out', dest='outfile')
     parser.add_argument('--cluster', dest='clusterfilename')
+    parser.add_argument('--tag', dest='tagfilename')
+    parser.add_argument('--size_rank', dest='sizerank')
     args = parser.parse_args()
 
     graph = load_graph(args.filename)
     rank_dict  = generate_page_rank(graph)
     
-    output_results(rank_dict, args.outfile, args.clusterfilename)
+    output_results(rank_dict, args.outfile, args.clusterfilename, args.tagfilename, int(args.sizerank))
 
 if __name__ == '__main__':
     main()
