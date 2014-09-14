@@ -40,7 +40,7 @@ def output_results(rank_dict, out_filename, cluster_filename, tag_filename, amou
                         filtered_tag_str += json.dumps(possible_tags[0]) + ','
 
             else:
-                possible_tags = filter(lambda entry: entry['address'] == wallet_id, tag_list)
+                possible_tags = filter(lambda entry: entry['address'] == cluster_id, tag_list)
                 if possible_tags:
                     filtered_tag_str += json.dumps(possible_tags[0]) + ','
 
