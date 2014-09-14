@@ -30,22 +30,22 @@ def output_results(rank_dict, out_filename, cluster_filename, tag_filename, amou
         out_file.write('user_cluster, wallets_addresses, tags_list, ranking_score\n')
         for cluster_id in sorted(rank_dict, key=rank_dict.get, reverse=True)[:amount_tops]:
             wallet_ids = []
-            filtered_tag_list = []
+            filtered_tag_str = ''
 
             if re.match(r'^\d+$', cluster_id):
                 wallet_ids = [item[0] for item in filter(lambda i: i[1]==int(cluster_id), user_clusters.items())]
                 for wallet_id in wallet_ids:
                     possible_tags = filter(lambda entry: entry['address'] == wallet_id, tag_list)
                     if possible_tags:
-                        filtered_tag_list += possible_tags[0]
+                        filtered_tag_str += json.dumps(possible_tags[0]) + ','
 
             else:
                 possible_tags = filter(lambda entry: entry['address'] == wallet_id, tag_list)
                 if possible_tags:
-                    filtered_tag_list += possible_tags[0]
+                    filtered_tag_str += json.dumps(possible_tags[0]) + ','
 
 
-            out_file.write(cluster_id + ',' + str(wallet_ids) + ','+  str(filtered_tag_list) + ',' +
+            out_file.write(cluster_id + ',' + str(wallet_ids) + ',' + '[' + filtered_tag_str.strip(',') + ']' + ',' +
                            str(rank_dict[cluster_id]) + '\n')
 
 def main():
