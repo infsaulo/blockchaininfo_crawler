@@ -1,3 +1,5 @@
+from scipy.stats import kendalltau
+
 def calculate_precision(relevant_entries, retrieved_entries):
     return len(set(relevant_entries) & set(retrieved_entries))/float(len(relevant_entries))
 
@@ -10,3 +12,7 @@ def calculate_average_precision(relevant_entries, retrieved_entries):
                                                  retrieved_entries[:slice_size])
 
     return average_precision/amount_entries
+
+def calculate_kendalltau(list1, list2):
+    kendall, p_value = kendalltau(list1, list2)
+    return kendall
