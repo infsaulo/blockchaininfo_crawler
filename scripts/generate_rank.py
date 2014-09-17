@@ -12,6 +12,10 @@ def generate_page_rank(graph):
     page_rank_dict = nx.pagerank(graph)
     return page_rank_dict
 
+def generate_betweenness_rank(graph):
+    betweenness_rank_dict = nx.betweenness_centrality(graph)
+    return betweenness_rank_dict
+
 def output_results(rank_dict, out_filename, cluster_filename, tag_filename, amount_tops):
 
     tag_list = None
@@ -54,11 +58,16 @@ def main():
     parser.add_argument('--out', dest='outfile')
     parser.add_argument('--cluster', dest='clusterfilename')
     parser.add_argument('--tag', dest='tagfilename')
+    parser.add_argument('--rank_metric', dest='rankmetric')
     parser.add_argument('--size_rank', dest='sizerank')
     args = parser.parse_args()
 
     graph = load_graph(args.filename)
-    rank_dict  = generate_page_rank(graph)
+    rank_dict = None
+    if args.rankmetric == 'pagerank':
+        rank_dict  = generate_page_rank(graph)
+    elif args.rankmetric == 'betweenness':
+        rank_dict = generate_betweenness_rank(graph)
     
     output_results(rank_dict, args.outfile, args.clusterfilename, args.tagfilename, int(args.sizerank))
 
