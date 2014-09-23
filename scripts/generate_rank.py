@@ -16,6 +16,10 @@ def generate_betweenness_rank(graph):
     betweenness_rank_dict = nx.betweenness_centrality(graph)
     return betweenness_rank_dict
 
+def generate_closeness_rank(graph):
+    closeness_rank_dict = nx.closeness_centrality(graph)
+    return closeness_rank_dict
+
 def output_results(rank_dict, out_filename, cluster_filename, tag_filename, amount_tops):
 
     tag_list = None
@@ -68,6 +72,8 @@ def main():
         rank_dict  = generate_page_rank(graph)
     elif args.rankmetric == 'betweenness':
         rank_dict = generate_betweenness_rank(graph)
+    elif args.rankmetric == 'closeness':
+        rank_dict = generate_closeness_rank(graph)
     
     output_results(rank_dict, args.outfile, args.clusterfilename, args.tagfilename, int(args.sizerank))
 
