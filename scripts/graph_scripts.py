@@ -24,7 +24,7 @@ def main():
     parser.add_argument("--output_file", dest="output_file")
     args = parser.parse_args()
 
-    if args.script == 'major_strongly_component':
+    if args.script == 'major_strongly_component' :
         graph = nx.read_gpickle(args.input_file)
         subgraph = get_major_strongly_component(graph)
         if bool(args.is_out_file):
