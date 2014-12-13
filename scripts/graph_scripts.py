@@ -49,9 +49,9 @@ def gauss_jacobi_method(graph, min_quadratic_error):
 
     gauss_jacobi_scores = dict()
     for index in xrange(X.shape[0]):
-        gauss_jacobi_score[index] = {'user_id': nodes_list[index], 'score': X[index, 0]}
+        gauss_jacobi_scores[index] = {'user_id': nodes_list[index], 'score': X[index, 0]}
 
-    return gauss_jacobi_score
+    return gauss_jacobi_scores
  
 def main():
 
