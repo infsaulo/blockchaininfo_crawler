@@ -37,7 +37,7 @@ class ThreadedLookUp(Thread):
             filtered_tag_str = ''
 
             if re.match(r'^\d+$', cluster_id):
-                wallet_ids = [item[0] for item in filter(lambda i: i[1]==int(cluster_id), self.user_clusters.items())]
+                wallet_ids = [item[0] for item in filter(lambda i: i[1]==int(cluster_id), self.users_clusters.items())]
                 for wallet_id in wallet_ids:
                     possible_tags = filter(lambda entry: entry['address'] == wallet_id, self.tag_list)
                     if possible_tags:
@@ -73,7 +73,7 @@ def output_results(rank_dict, out_filename, cluster_filename, tag_filename, amou
     for index in xrange(amount_threads):
         threaded_lookup_list[index].start()
     for index in xrange(amount_threads):
-        threaded_lookup_list.join()
+        threaded_lookup_list[index].join()
 
     with open(out_filename, 'w') as out_file:
         out_file.write('user_cluster, wallets_addresses, tags_list, ranking_score\n')
