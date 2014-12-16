@@ -40,7 +40,7 @@ def output_results(rank_dict, out_filename, cluster_filename, tag_filename, amou
 
     del user_clusters
 
-    with open(out_filename) as outfile:
+    with open(out_filename, 'w') as outfile:
         for cluster_id in sorted(rank_dict, key=rank_dict.get, reverse=True)[:amount_tops]:
                 print "Getting information of user " + str(cluster_id)
                 wallet_ids = []
