@@ -56,6 +56,16 @@ def output_results(rank_dict, out_filename, cluster_filename, tag_filename, amou
             out_file.write(cluster_id + ',' + str(wallet_ids) + ',' + '[' + filtered_tag_str.strip(',') + ']' + ',' +
                            str(rank_dict[cluster_id]) + '\n')
 
+def load_gauss_jacobi_dict(filename):
+    gauss_jacobi_dict = dict()
+    with open(filename) as file:
+        for line in filename:
+            parsed_line = line.strip().strip()
+            user_id, score = parsed_line[0], float(parsed_line[1])
+        gauss_jacobi_dict[user_id] = score
+
+    return gauss_jacobi_dict
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--file', dest='filename')
@@ -74,6 +84,9 @@ def main():
         rank_dict = generate_betweenness_rank(graph)
     elif args.rankmetric == 'closeness':
         rank_dict = generate_closeness_rank(graph)
+
+    elif args.rankmetric == "gauss-jacobi":
+        rank_dict = load_gauss_jacobi_dict(args.filename)
     
     output_results(rank_dict, args.outfile, args.clusterfilename, args.tagfilename, int(args.sizerank))
 
