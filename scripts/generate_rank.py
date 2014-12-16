@@ -36,25 +36,27 @@ def output_results(rank_dict, out_filename, cluster_filename, tag_filename, amou
         user_clusters = pickle.load(cluster_file)
 
     for wallet_id, cluster_id in user_clusters.items():
-        cluster_wallets[cluster_id].append(wallet_id)
+        cluster_wallets[str(cluster_id)].append(wallet_id)
 
     del user_clusters
 
     with open(out_filename, 'w') as outfile:
+        print cluster_wallets.items()[:10]
         for cluster_id in sorted(rank_dict, key=rank_dict.get, reverse=True)[:amount_tops]:
                 print "Getting information of user " + str(cluster_id)
                 wallet_ids = []
                 filtered_tag_str = ''
 
-                if re.match(r'^\d+$', cluster_id):
-                    wallet_ids = cluster_wallets[cluster_id]
+                if re.match(r'^\d+$', str(cluster_id)):
+                    wallet_ids = cluster_wallets[str(cluster_id)]
+                    print wallet_ids
                     for wallet_id in wallet_ids:
                         possible_tags = filter(lambda entry: entry['address'] == wallet_id, tag_list)
                         if possible_tags:
                             filtered_tag_str += json.dumps(possible_tags[0]) + ','
 
                 else:
-                    possible_tags = filter(lambda entry: entry['address'] == cluster_id, tag_list)
+                    possible_tags = filter(lambda entry: entry['address'] == str(cluster_id), tag_list)
                     if possible_tags:
                         filtered_tag_str += json.dumps(possible_tags[0]) + ','
 
