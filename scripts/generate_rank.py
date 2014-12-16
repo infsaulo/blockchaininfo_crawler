@@ -32,6 +32,7 @@ class ThreadedLookUp(Thread):
     def run(self):
         self.list_info = []
         for cluster_id in sorted(self.rank_dict, key=self.rank_dict.get, reverse=True)[self.interval[0]:self.interval[1]]:
+            print "Getting information of user " + str(cluster_id)
             wallet_ids = []
             filtered_tag_str = ''
 
@@ -83,10 +84,10 @@ def output_results(rank_dict, out_filename, cluster_filename, tag_filename, amou
 def load_gauss_jacobi_dict(filename):
     gauss_jacobi_dict = dict()
     with open(filename) as file:
-        for line in filename:
+        for line in file:
             parsed_line = line.strip().split()
             user_id, score = parsed_line[1], float(parsed_line[2])
-        gauss_jacobi_dict[user_id] = score
+            gauss_jacobi_dict[user_id] = score
 
     return gauss_jacobi_dict
 
