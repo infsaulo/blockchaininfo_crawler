@@ -1,6 +1,6 @@
 import networkx as nx
 import simplejson as json
-from threading import Thread
+from collections import defaultdict
 import argparse
 import pickle
 import re
@@ -21,37 +21,6 @@ def generate_closeness_rank(graph):
     closeness_rank_dict = nx.closeness_centrality(graph)
     return closeness_rank_dict
 
-class ThreadedLookUp(Thread):
-    def __init__(self, rank_dict, users_clusters, tag_list, interval):
-        Thread.__init__(self)
-        self.rank_dict = rank_dict
-        self.interval = interval
-        self.users_clusters = users_clusters
-        self.tag_list = tag_list
-
-    def run(self):
-        self.list_info = []
-        for cluster_id in sorted(self.rank_dict, key=self.rank_dict.get, reverse=True)[self.interval[0]:self.interval[1]]:
-            print "Getting information of user " + str(cluster_id)
-            wallet_ids = []
-            filtered_tag_str = ''
-
-            if re.match(r'^\d+$', cluster_id):
-                wallet_ids = [item[0] for item in filter(lambda i: i[1]==int(cluster_id), self.users_clusters.items())]
-                for wallet_id in wallet_ids:
-                    possible_tags = filter(lambda entry: entry['address'] == wallet_id, self.tag_list)
-                    if possible_tags:
-                        filtered_tag_str += json.dumps(possible_tags[0]) + ','
-
-            else:
-                possible_tags = filter(lambda entry: entry['address'] == cluster_id, self.tag_list)
-                if possible_tags:
-                    filtered_tag_str += json.dumps(possible_tags[0]) + ','
-
-
-            self.list_info.append(cluster_id + ',' + str(wallet_ids) + ',' + '[' + filtered_tag_str.strip(',') + ']' + ',' +
-                           str(self.rank_dict[cluster_id]))
-
 def output_results(rank_dict, out_filename, cluster_filename, tag_filename, amount_tops):
     tag_list = None
     with open(tag_filename) as tag_file:
@@ -62,23 +31,35 @@ def output_results(rank_dict, out_filename, cluster_filename, tag_filename, amou
         tag_list = json.loads(tag_list_str)
 
     user_clusters = None
+    cluster_wallets = defaultdict(list)
     with open(cluster_filename, "rb") as cluster_file:
         user_clusters = pickle.load(cluster_file)
 
-    chunk_size = 10
-    amount_threads = amount_tops/chunk_size
-    threaded_lookup_list = []
-    for index in xrange(amount_threads):
-        threaded_lookup_list.append(ThreadedLookUp(rank_dict, user_clusters, tag_list, (index*chunk_size, index*chunk_size+chunk_size)))
-    for index in xrange(amount_threads):
-        threaded_lookup_list[index].start()
-    for index in xrange(amount_threads):
-        threaded_lookup_list[index].join()
+    for wallet_id, cluster_id in user_clusters.items():
+        cluster_wallets[cluster_id].append(wallet_id)
+
+    del user_clusters
 
     with open(out_filename) as outfile:
-        for index in xrange(amount_threads):
-            for info in threaded_lookup_list[index].list_info():
-                outfile.write(info + '\n')
+        for cluster_id in sorted(rank_dict, key=rank_dict.get, reverse=True)[:amount_tops]:
+                print "Getting information of user " + str(cluster_id)
+                wallet_ids = []
+                filtered_tag_str = ''
+
+                if re.match(r'^\d+$', cluster_id):
+                    wallet_ids = cluster_wallets[cluster_id]
+                    for wallet_id in wallet_ids:
+                        possible_tags = filter(lambda entry: entry['address'] == wallet_id, tag_list)
+                        if possible_tags:
+                            filtered_tag_str += json.dumps(possible_tags[0]) + ','
+
+                else:
+                    possible_tags = filter(lambda entry: entry['address'] == cluster_id, tag_list)
+                    if possible_tags:
+                        filtered_tag_str += json.dumps(possible_tags[0]) + ','
+
+                outfile.write(cluster_id + ',' + str(wallet_ids) + ',' + '[' + filtered_tag_str.strip(',') + ']' + ',' +
+                               str(rank_dict[cluster_id]) + '\n')
 
 def load_gauss_jacobi_dict(filename):
     gauss_jacobi_dict = dict()
