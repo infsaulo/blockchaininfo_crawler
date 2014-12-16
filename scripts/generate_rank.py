@@ -60,8 +60,8 @@ def load_gauss_jacobi_dict(filename):
     gauss_jacobi_dict = dict()
     with open(filename) as file:
         for line in filename:
-            parsed_line = line.strip().strip()
-            user_id, score = parsed_line[0], float(parsed_line[1])
+            parsed_line = line.strip().split()
+            user_id, score = parsed_line[1], float(parsed_line[2])
         gauss_jacobi_dict[user_id] = score
 
     return gauss_jacobi_dict
