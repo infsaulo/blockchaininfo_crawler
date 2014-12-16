@@ -1,9 +1,11 @@
 import networkx as nx
 import simplejson as json
-from threading import Thread
+from threading import Thread, Lock
 import argparse
 import pickle
 import re
+
+write_lock = Lock()
 
 def load_graph(filename):
     graph = nx.read_gpickle(filename)
@@ -22,15 +24,15 @@ def generate_closeness_rank(graph):
     return closeness_rank_dict
 
 class ThreadedLookUp(Thread):
-    def __init__(self, rank_dict, users_clusters, tag_list, interval):
+    def __init__(self, rank_dict, users_clusters, tag_list, interval, out_filename):
         Thread.__init__(self)
         self.rank_dict = rank_dict
         self.interval = interval
         self.users_clusters = users_clusters
         self.tag_list = tag_list
+        self.out_filename = out_filename
 
     def run(self):
-        self.list_info = []
         for cluster_id in sorted(self.rank_dict, key=self.rank_dict.get, reverse=True)[self.interval[0]:self.interval[1]]:
             print "Getting information of user " + str(cluster_id)
             wallet_ids = []
@@ -49,8 +51,10 @@ class ThreadedLookUp(Thread):
                     filtered_tag_str += json.dumps(possible_tags[0]) + ','
 
 
-            self.list_info.append(cluster_id + ',' + str(wallet_ids) + ',' + '[' + filtered_tag_str.strip(',') + ']' + ',' +
-                           str(self.rank_dict[cluster_id]))
+            with write_lock:
+                with open(self.out_filename, 'a') as outfile:
+                    outfile.write(cluster_id + ',' + str(wallet_ids) + ',' + '[' + filtered_tag_str.strip(',') + ']' + ',' +
+                           str(self.rank_dict[cluster_id]) + '\n')
 
 def output_results(rank_dict, out_filename, cluster_filename, tag_filename, amount_tops):
     tag_list = None
@@ -69,17 +73,11 @@ def output_results(rank_dict, out_filename, cluster_filename, tag_filename, amou
     amount_threads = amount_tops/chunk_size
     threaded_lookup_list = []
     for index in xrange(amount_threads):
-        threaded_lookup_list.append(ThreadedLookUp(rank_dict, user_clusters, tag_list, (index*chunk_size, index*chunk_size+chunk_size)))
+        threaded_lookup_list.append(ThreadedLookUp(rank_dict, user_clusters, tag_list, (index*chunk_size, index*chunk_size+chunk_size), out_filename))
     for index in xrange(amount_threads):
         threaded_lookup_list[index].start()
     for index in xrange(amount_threads):
         threaded_lookup_list[index].join()
-
-    with open(out_filename, 'w') as out_file:
-        out_file.write('user_cluster, wallets_addresses, tags_list, ranking_score\n')
-        for lookup_object in threaded_lookup_list:
-            for line_info in lookup_object.list_info:
-                out_file.write(line_info + '\n')
 
 def load_gauss_jacobi_dict(filename):
     gauss_jacobi_dict = dict()
