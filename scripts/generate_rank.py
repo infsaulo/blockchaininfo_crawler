@@ -76,7 +76,9 @@ def main():
     parser.add_argument('--size_rank', dest='sizerank')
     args = parser.parse_args()
 
-    graph = load_graph(args.filename)
+    if args.rankmetric != "gauss-jacobi":
+        graph = load_graph(args.filename)
+
     rank_dict = None
     if args.rankmetric == 'pagerank':
         rank_dict  = generate_page_rank(graph)
